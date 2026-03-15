@@ -1,0 +1,15 @@
+# Model files (too large for GitHub)
+*.json
+!data_sample/*.json
+
+# Full datasets
+data/
+outputs/
+
+# Python
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+
+# Colab
+.config/
