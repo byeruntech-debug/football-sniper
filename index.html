@@ -1,0 +1,646 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Football Sniper V20.3.4</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#080808;--bg2:#111;--bg3:#161616;
+  --border:#1e1e1e;--border2:#2a2a2a;
+  --text:#f0ede8;--text2:#888;--text3:#444;
+  --green:#4ade80;--green-d:#0d2a1a;--green-b:#1a5c2e;
+  --amber:#fbbf24;--red:#f87171;--blue:#60a5fa;
+}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden}
+
+/* Loading */
+#loading{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:100;flex-direction:column;gap:16px;transition:opacity .4s}
+#loading.hide{opacity:0;pointer-events:none}
+.load-ring{width:40px;height:40px;border:2px solid var(--border2);border-top-color:var(--green);border-radius:50%;animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.load-text{font-family:'DM Mono',monospace;font-size:12px;color:var(--text2);letter-spacing:.1em}
+
+/* Header */
+.hdr{text-align:center;padding:3rem 1rem 2rem;border-bottom:1px solid var(--border)}
+.hdr-tag{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.2em;color:var(--green);margin-bottom:10px}
+.hdr-title{font-family:'Syne',sans-serif;font-size:clamp(36px,6vw,64px);font-weight:800;line-height:1;margin-bottom:8px}
+.hdr-title span{color:var(--green)}
+.hdr-sub{font-size:13px;color:var(--text2)}
+.stats-bar{display:flex;justify-content:center;flex-wrap:wrap;gap:24px;padding:16px 1rem;border-bottom:1px solid var(--border)}
+.stat{text-align:center}
+.stat-v{font-family:'DM Mono',monospace;font-size:18px;font-weight:500;color:var(--green);display:block}
+.stat-l{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.08em}
+
+/* Main */
+.main{max-width:1000px;margin:0 auto;padding:2rem 1rem}
+
+/* Form */
+.form-card{background:var(--bg2);border:1px solid var(--border);border-radius:16px;padding:1.5rem;margin-bottom:1.5rem}
+.form-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+.form-grid-2{display:grid;grid-template-columns:1fr 1fr auto;gap:12px;margin-top:12px;align-items:end}
+.flabel{font-size:10px;font-weight:500;text-transform:uppercase;letter-spacing:.1em;color:var(--text2);margin-bottom:6px;display:block}
+select,input[type=number],input[type=date]{
+  width:100%;background:var(--bg3);border:1px solid var(--border2);border-radius:10px;
+  color:var(--text);font-family:'DM Sans',sans-serif;font-size:14px;
+  padding:10px 14px;outline:none;transition:border-color .2s;appearance:none;
+}
+select:focus,input:focus{border-color:var(--green)}
+option{background:var(--bg2)}
+
+/* Analyze button */
+.btn-analyze{
+  background:var(--green);color:#000;font-family:'Syne',sans-serif;font-weight:700;
+  font-size:14px;letter-spacing:.05em;border:none;border-radius:10px;
+  padding:12px 28px;cursor:pointer;transition:all .2s;white-space:nowrap;
+  width:100%;
+}
+.btn-analyze:hover{background:#22c55e;transform:translateY(-1px)}
+.btn-analyze:active{transform:translateY(0)}
+.btn-analyze:disabled{background:var(--border2);color:var(--text3);cursor:not-allowed;transform:none}
+
+/* Result */
+#result{display:none}
+#result.show{display:block;animation:fadeUp .4s ease}
+@keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+
+/* Tier banner */
+.tier-banner{border-radius:14px;padding:1.5rem;text-align:center;margin-bottom:1.5rem}
+.tier-banner.sniper{background:var(--green-d);border:1px solid var(--green-b)}
+.tier-banner.hold{background:var(--bg2);border:1px solid var(--border)}
+.tier-icon{font-size:40px;display:block;margin-bottom:8px}
+.tier-label{font-family:'Syne',sans-serif;font-size:36px;font-weight:800;display:block}
+.tier-label.sniper{color:var(--green)}
+.tier-label.hold{color:var(--text2)}
+.tier-reason{font-family:'DM Mono',monospace;font-size:11px;color:var(--text3);margin-top:4px;display:block}
+
+/* Grid */
+.two-col{display:grid;grid-template-columns:1.4fr 1fr;gap:14px;margin-bottom:14px}
+.metric-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px}
+.card{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:14px 16px}
+.card-label{font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);margin-bottom:6px}
+.card-val{font-family:'Syne',sans-serif;font-size:22px;font-weight:700;color:var(--text)}
+.card-sub{font-family:'DM Mono',monospace;font-size:10px;color:var(--text3);margin-top:3px}
+.card-val.green{color:var(--green)}.card-val.amber{color:var(--amber)}.card-val.red{color:var(--red)}
+
+/* Prob bars */
+.prob-row{display:flex;align-items:center;gap:12px;margin-bottom:10px}
+.prob-row:last-child{margin-bottom:0}
+.prob-name{font-size:12px;color:var(--text2);min-width:80px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.prob-bg{flex:1;height:7px;background:var(--bg3);border-radius:4px;overflow:hidden}
+.prob-fill{height:100%;border-radius:4px;transition:width .6s ease}
+.prob-pct{font-family:'DM Mono',monospace;font-size:12px;color:var(--text);min-width:42px;text-align:right}
+
+/* Filter badges */
+.filter-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px}
+.filter-badge{background:var(--bg2);border-radius:9px;padding:9px 12px;display:flex;align-items:flex-start;gap:8px;font-size:11px}
+.filter-badge.pass{border:1px solid #1a3d26}
+.filter-badge.fail{border:1px solid #2a1a1a}
+.fdot{width:7px;height:7px;border-radius:50%;flex-shrink:0;margin-top:3px}
+.fdot.pass{background:var(--green)}.fdot.fail{background:var(--red)}
+.fname{color:var(--text2);font-size:10px;font-weight:500;display:block;text-transform:uppercase;letter-spacing:.05em}
+.fmsg{color:var(--text3);font-size:10px;font-family:'DM Mono',monospace;margin-top:2px}
+
+/* Scores */
+.score-pill{background:var(--bg3);border:1px solid var(--border);border-radius:7px;padding:5px 12px;font-family:'DM Mono',monospace;font-size:12px;color:var(--text2);display:inline-block;margin:3px}
+.score-pill b{color:var(--text)}
+
+/* Kelly */
+.kelly-card{background:#0d1f13;border:1px solid #1a3d26;border-radius:12px;padding:14px 18px;margin-bottom:14px}
+.kelly-title{font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--green);margin-bottom:12px}
+.kelly-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.kv{font-family:'Syne',sans-serif;font-size:18px;font-weight:700;color:var(--green);display:block}
+.kl{font-size:10px;color:var(--text3);margin-top:2px}
+
+/* Warning */
+.warn-card{background:#1a1000;border:1px solid #3a2500;border-radius:10px;padding:12px 16px;margin-bottom:10px;font-size:12px;color:var(--amber)}
+
+/* Footer */
+footer{text-align:center;padding:2rem 1rem;border-top:1px solid var(--border);font-family:'DM Mono',monospace;font-size:10px;color:var(--text3);letter-spacing:.05em}
+
+/* Error */
+.err-card{background:#1a0808;border:1px solid #3a1010;border-radius:12px;padding:1.5rem;text-align:center;color:var(--red);margin-bottom:1rem}
+
+@media(max-width:640px){
+  .form-grid,.two-col,.metric-grid,.filter-grid,.kelly-grid{grid-template-columns:1fr 1fr}
+  .form-grid-2{grid-template-columns:1fr 1fr}
+  .hdr-title{font-size:36px}
+}
+@media(max-width:400px){
+  .form-grid,.metric-grid,.filter-grid{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<div id="loading">
+  <div class="load-ring"></div>
+  <div class="load-text">Loading model V20.3.4...</div>
+</div>
+
+<header class="hdr">
+  <div class="hdr-tag">Football Sniper System</div>
+  <div class="hdr-title">The <span>Sniper</span></div>
+  <div class="hdr-sub">Dixon-Coles V3 · Elo Walk-Forward · 6-Layer Filter · V20.3.4</div>
+</header>
+
+<div class="stats-bar">
+  <div class="stat"><span class="stat-v">81.4%</span><span class="stat-lbl stat-l">WF Accuracy</span></div>
+  <div class="stat"><span class="stat-v">+1.6%</span><span class="stat-lbl stat-l">Yield vs B365</span></div>
+  <div class="stat"><span class="stat-v">4.3e-19</span><span class="stat-lbl stat-l">p-value</span></div>
+  <div class="stat"><span class="stat-v" id="stat-leagues">10</span><span class="stat-lbl stat-l">Active Leagues</span></div>
+  <div class="stat"><span class="stat-v" id="stat-teams">—</span><span class="stat-lbl stat-l">Teams</span></div>
+</div>
+
+<main class="main">
+
+  <!-- Form -->
+  <div class="form-card">
+    <div class="form-grid">
+      <div>
+        <span class="flabel">Liga</span>
+        <select id="liga" onchange="onLigaChange()">
+          <option value="">Loading...</option>
+        </select>
+      </div>
+      <div>
+        <span class="flabel">Tim Kandang</span>
+        <select id="home">
+          <option value="">Pilih liga dulu</option>
+        </select>
+      </div>
+      <div>
+        <span class="flabel">Tim Tamu</span>
+        <select id="away">
+          <option value="">Pilih liga dulu</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-grid-2">
+      <div>
+        <span class="flabel">Tanggal</span>
+        <input type="date" id="match-date">
+      </div>
+      <div>
+        <span class="flabel">Odds Pasar (opsional)</span>
+        <input type="number" id="odds" min="1.01" max="20" step="0.01" value="1.80" placeholder="1.80">
+      </div>
+      <button class="btn-analyze" id="btn-analyze" onclick="analyze()" disabled>
+        Analisa
+      </button>
+    </div>
+  </div>
+
+  <!-- Error -->
+  <div id="error-card" class="err-card" style="display:none"></div>
+
+  <!-- Result -->
+  <div id="result">
+
+    <!-- Tier -->
+    <div id="tier-banner" class="tier-banner hold">
+      <span class="tier-icon" id="tier-icon">⏸</span>
+      <span class="tier-label hold" id="tier-label">HOLD</span>
+      <span class="tier-reason" id="tier-reason">—</span>
+    </div>
+
+    <!-- Metrics -->
+    <div class="metric-grid">
+      <div class="card"><div class="card-label">Prediksi</div><div class="card-val" id="m-pred" style="font-size:15px">—</div><div class="card-sub" id="m-conf-sub">—</div></div>
+      <div class="card"><div class="card-label">Confidence</div><div class="card-val" id="m-conf">—</div><div class="card-sub" id="m-thr-sub">—</div></div>
+      <div class="card"><div class="card-label">Elo Difference</div><div class="card-val" id="m-elo">—</div><div class="card-sub" id="m-elo-sub">—</div></div>
+      <div class="card"><div class="card-label">Lambda Home</div><div class="card-val amber" id="m-lh">—</div><div class="card-sub">xG kandang</div></div>
+      <div class="card"><div class="card-label">Lambda Away</div><div class="card-val amber" id="m-la">—</div><div class="card-sub">xG tamu</div></div>
+      <div class="card"><div class="card-label">Lambda Total</div><div class="card-val" id="m-lt">—</div><div class="card-sub">valid [1.2–6.5]</div></div>
+    </div>
+
+    <!-- Two col -->
+    <div class="two-col">
+      <div>
+        <!-- Prob bars -->
+        <div class="card" style="margin-bottom:14px">
+          <div class="card-label" style="margin-bottom:12px">Probabilitas</div>
+          <div class="prob-row">
+            <div class="prob-name" id="pb-home-name">Home</div>
+            <div class="prob-bg"><div class="prob-fill" id="pb-home" style="width:0%;background:#4ade80"></div></div>
+            <div class="prob-pct" id="pb-home-pct">—</div>
+          </div>
+          <div class="prob-row">
+            <div class="prob-name">Imbang</div>
+            <div class="prob-bg"><div class="prob-fill" id="pb-draw" style="width:0%;background:#fbbf24"></div></div>
+            <div class="prob-pct" id="pb-draw-pct">—</div>
+          </div>
+          <div class="prob-row">
+            <div class="prob-name" id="pb-away-name">Away</div>
+            <div class="prob-bg"><div class="prob-fill" id="pb-away" style="width:0%;background:#f87171"></div></div>
+            <div class="prob-pct" id="pb-away-pct">—</div>
+          </div>
+        </div>
+
+        <!-- Top scores -->
+        <div class="card">
+          <div class="card-label" style="margin-bottom:8px">Skor Paling Mungkin</div>
+          <div id="top-scores"></div>
+        </div>
+      </div>
+
+      <div>
+        <!-- DC vs Elo -->
+        <div class="card" style="margin-bottom:12px">
+          <div class="card-label" style="margin-bottom:8px">Dixon-Coles (55%)</div>
+          <div id="dc-probs" style="font-family:'DM Mono',monospace;font-size:12px;color:var(--text2);line-height:2"></div>
+        </div>
+        <div class="card" style="margin-bottom:12px">
+          <div class="card-label" style="margin-bottom:8px">Elo Rating (45%)</div>
+          <div id="elo-probs" style="font-family:'DM Mono',monospace;font-size:12px;color:var(--text2);line-height:2"></div>
+        </div>
+        <!-- Match info -->
+        <div class="card">
+          <div class="card-label" style="margin-bottom:8px">Info Laga</div>
+          <div id="match-info" style="font-size:12px;color:var(--text2);line-height:2"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Kelly -->
+    <div id="kelly-card" class="kelly-card" style="display:none">
+      <div class="kelly-title">Passive Kelly Calculator (Shadow Mode)</div>
+      <div class="kelly-grid">
+        <div><span class="kv" id="k-tier">—</span><div class="kl">Fraction tier</div></div>
+        <div><span class="kv" id="k-ev">—</span><div class="kl">Expected Value</div></div>
+        <div><span class="kv" id="k-full">—</span><div class="kl">Full Kelly f*</div></div>
+        <div><span class="kv" id="k-stake">—</span><div class="kl">Rekomendasi stake</div></div>
+      </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="card-label" style="margin-bottom:8px">Filter Pipeline</div>
+    <div class="filter-grid" id="filters"></div>
+
+  </div><!-- /result -->
+
+</main>
+
+<footer>
+  Football Sniper V20.3.4 &nbsp;·&nbsp;
+  Dixon-Coles + Elo Walk-Forward &nbsp;·&nbsp;
+  81.4% WF Accuracy &nbsp;·&nbsp;
+  <a href="https://github.com/byeruntech-debug/football-sniper" style="color:var(--green);text-decoration:none">GitHub</a>
+</footer>
+
+<script>
+// ════════════════════════════════════════════════════
+//  MODEL & STATE
+// ════════════════════════════════════════════════════
+let MODEL = null;
+const LIGA_DISPLAY = {
+  EPL:'Premier League (England)',Bundesliga:'Bundesliga (Germany)',
+  Serie_A:'Serie A (Italy)',La_Liga:'La Liga (Spain)',
+  Ligue_1:'Ligue 1 (France)',Eredivisie:'Eredivisie (Netherlands)',
+  Liga_Portugal:'Primeira Liga (Portugal)',Super_Lig:'Super Lig (Turkey)',
+  Belgium:'Pro League (Belgium)',Scotland:'Premiership (Scotland)',
+  Ligue_1:'Ligue 1 (France)',Brazil:'Serie A (Brazil)',
+};
+
+// ── Load model JSON ───────────────────────────────────
+async function loadModel() {
+  const paths = [
+    './model_v20_complete.json',
+    'https://raw.githubusercontent.com/byeruntech-debug/football-sniper/main/model_v20_complete.json',
+  ];
+  for (const path of paths) {
+    try {
+      const r = await fetch(path);
+      if (r.ok) {
+        MODEL = await r.json();
+        return true;
+      }
+    } catch(e) {}
+  }
+  return false;
+}
+
+// ════════════════════════════════════════════════════
+//  POISSON MATH
+// ════════════════════════════════════════════════════
+function logGamma(n) {
+  if (n <= 0) return Infinity;
+  let x = n, res = 0;
+  while (x < 8) { res -= Math.log(x); x++; }
+  res += 0.5*Math.log(2*Math.PI/x) + x*(Math.log(x)-1);
+  return res;
+}
+function poissonPMF(k, lambda) {
+  if (lambda <= 0) return k === 0 ? 1 : 0;
+  return Math.exp(k*Math.log(lambda) - lambda - logGamma(k+1));
+}
+function tau(lh, la, gh, ga, rho) {
+  if (gh===0&&ga===0) return 1 - lh*la*rho;
+  if (gh===1&&ga===0) return 1 + la*rho;
+  if (gh===0&&ga===1) return 1 + lh*rho;
+  if (gh===1&&ga===1) return 1 - rho;
+  return 1.0;
+}
+
+// ════════════════════════════════════════════════════
+//  PREDICTION ENGINE
+// ════════════════════════════════════════════════════
+function dcPredict(home, away, liga, maxGoals=8) {
+  const p = MODEL.dc_params[liga];
+  if (!p) return null;
+  const {attack:atk, defense:dfn, hfa, rho} = p;
+  const lh = (atk[home]!==undefined && dfn[away]!==undefined)
+    ? Math.exp(atk[home] + dfn[away] + hfa)
+    : Math.exp(hfa);
+  const la = (atk[away]!==undefined && dfn[home]!==undefined)
+    ? Math.exp(atk[away] + dfn[home])
+    : 1.0;
+
+  const M = Array.from({length:maxGoals+1}, ()=>new Array(maxGoals+1).fill(0));
+  let sum = 0;
+  for (let gh=0;gh<=maxGoals;gh++) for (let ga=0;ga<=maxGoals;ga++) {
+    const t = tau(lh,la,gh,ga,rho);
+    M[gh][ga] = t * poissonPMF(gh,lh) * poissonPMF(ga,la);
+    sum += M[gh][ga];
+  }
+  for (let gh=0;gh<=maxGoals;gh++) for (let ga=0;ga<=maxGoals;ga++) M[gh][ga]/=sum;
+
+  let hw=0, dr=0, aw=0;
+  for (let gh=0;gh<=maxGoals;gh++) for (let ga=0;ga<=maxGoals;ga++) {
+    if (gh>ga) hw+=M[gh][ga];
+    else if (gh===ga) dr+=M[gh][ga];
+    else aw+=M[gh][ga];
+  }
+
+  // Top 5 scores
+  const flat = [];
+  for (let gh=0;gh<=maxGoals;gh++) for (let ga=0;ga<=maxGoals;ga++)
+    flat.push({gh,ga,p:M[gh][ga]});
+  flat.sort((a,b)=>b.p-a.p);
+
+  return {
+    home_win:hw, draw:dr, away_win:aw,
+    lambda_home:lh, lambda_away:la,
+    top_scores:flat.slice(0,5)
+  };
+}
+
+function eloPredict(home, away, liga) {
+  const tbl = MODEL.elo[liga] || {};
+  const rh = (tbl[home]||1500) + 50;
+  const ra = tbl[away] || 1500;
+  const eh = 1/(1+Math.pow(10,(ra-rh)/400));
+  const ea = 1-eh;
+  const diff = Math.abs(eh-ea);
+  const dr = Math.max(0.18, 0.35-diff*0.5);
+  const hw = eh*(1-dr), aw = ea*(1-dr);
+  const t = hw+dr+aw;
+  return {
+    home_win:hw/t, draw:dr/t, away_win:aw/t,
+    elo_home:tbl[home]||1500, elo_away:tbl[away]||1500,
+    elo_diff:(tbl[home]||1500)-(tbl[away]||1500)
+  };
+}
+
+function predict(home, away, liga, oddsVal=null) {
+  const dc = dcPredict(home, away, liga);
+  if (!dc) return null;
+  const el = eloPredict(home, away, liga);
+
+  let h = 0.55*dc.home_win + 0.45*el.home_win;
+  let d = 0.55*dc.draw     + 0.45*el.draw;
+  let a = 0.55*dc.away_win + 0.45*el.away_win;
+
+  const boost = (MODEL.draw_boost||{})[liga] || 1.431;
+  d *= boost;
+  const tot = h+d+a; h/=tot; d/=tot; a/=tot;
+
+  const conf = Math.max(h,d,a);
+  const pred = h===conf ? 'home_win' : (d===conf ? 'draw' : 'away_win');
+  const thr  = (MODEL.sniper_threshold||{})[liga] || 0.65;
+  const elo  = MODEL.elo[liga] || {};
+  const GK   = MODEL.giant_killers || {};
+  const DW   = (MODEL.draw_warning||{})[liga] || 0;
+  const lam  = dc.lambda_home + dc.lambda_away;
+
+  // Filters
+  const filters = [];
+  let tier = 'SNIPER';
+
+  const f1 = conf >= thr;
+  filters.push({name:'Threshold', pass:f1,
+    msg:`Conf ${(conf*100).toFixed(1)}% ${f1?'>=':'<'} thr ${(thr*100).toFixed(0)}%`});
+  if (!f1) tier='HOLD';
+
+  const f2 = !(DW && d > DW);
+  filters.push({name:'Draw Warning', pass:f2,
+    msg: f2 ? `Draw OK ${(d*100).toFixed(1)}%` : `Draw danger ${(d*100).toFixed(1)}% > ${(DW*100).toFixed(1)}%`});
+  if (!f2) tier='HOLD';
+
+  const awayElo = elo[away]||1500, homeElo = elo[home]||1500;
+  const gkGap = awayElo - homeElo;
+  const gkScore = GK[home] || 0;
+  const f3 = !(gkGap >= 100 && gkScore >= 2.0);
+  filters.push({name:'Giant Killer', pass:f3,
+    msg: f3 ? `No GK risk gap=${gkGap.toFixed(0)}` : `GK ${home} score=${gkScore}`});
+  if (!f3) tier='HOLD';
+
+  const f4 = lam >= 1.2 && lam <= 6.5;
+  filters.push({name:'Lambda', pass:f4,
+    msg:`λ ${lam.toFixed(2)} ${f4?'OK':'OUT'} [1.2–6.5]`});
+  if (!f4) tier='HOLD';
+
+  const absDiff = Math.abs(el.elo_diff);
+  const f5 = absDiff >= 30;
+  filters.push({name:'Elo Gap', pass:f5,
+    msg:`Gap ${absDiff} ${f5?'>= 30':'< 30'}`});
+  if (!f5) tier='HOLD';
+
+  const strict = ['EPL','La_Liga'];
+  let kelly = null;
+  if (oddsVal && oddsVal > 1.0) {
+    const ev = (conf * oddsVal) - 1;
+    const f6 = ev >= 0.05;
+    filters.push({name:'EV Check', pass:f6,
+      msg:`EV ${ev>=0?'+':''}${ev.toFixed(3)} vs min +0.05`});
+    if (!f6) tier='HOLD';
+
+    if (ev >= 0.05 && conf >= 0.60) {
+      const b = oddsVal - 1;
+      const fFull = (conf*(b+1)-1)/b;
+      if (fFull > 0) {
+        const frac = conf>=0.70 ? 0.25 : (conf>=0.65 ? 0.20 : 0.125);
+        const tierK = conf>=0.70 ? 'Quarter-K' : (conf>=0.65 ? 'Fifth-K' : 'Eighth-K');
+        const stake = Math.min(fFull*frac, 0.10);
+        kelly = {ev, fFull, stake, tier:tierK};
+      }
+    }
+  } else if (strict.includes(liga)) {
+    filters.push({name:'EV Check', pass:false, msg:'EPL/La_Liga wajib input odds'});
+    tier='HOLD';
+  } else {
+    filters.push({name:'EV Check', pass:true, msg:'No odds, skipped'});
+  }
+
+  const failedF = filters.find(f=>!f.pass);
+  return {
+    prediction:pred, home_prob:h, draw_prob:d, away_prob:a,
+    confidence:conf, tier, threshold:thr, filters,
+    reason: failedF ? failedF.msg : 'All filters passed',
+    dc, elo:el, kelly, liga, home, away,
+    elo_diff: el.elo_diff,
+    lambda_home: dc.lambda_home, lambda_away: dc.lambda_away,
+  };
+}
+
+// ════════════════════════════════════════════════════
+//  UI HELPERS
+// ════════════════════════════════════════════════════
+function $(id) { return document.getElementById(id); }
+
+function onLigaChange() {
+  const liga = $('liga').value;
+  if (!liga || !MODEL) return;
+  const teams = Object.keys((MODEL.dc_params[liga]||{}).attack||{}).sort();
+  const hSel = $('home'), aSel = $('away');
+  hSel.innerHTML = teams.map(t=>`<option>${t}</option>`).join('');
+  aSel.innerHTML = teams.map(t=>`<option>${t}</option>`).join('');
+  if (teams.length > 1) aSel.selectedIndex = 1;
+  $('btn-analyze').disabled = false;
+}
+
+function analyze() {
+  const liga  = $('liga').value;
+  const home  = $('home').value;
+  const away  = $('away').value;
+  const odds  = parseFloat($('odds').value) || null;
+  const date  = $('match-date').value || 'TBD';
+
+  if (!liga||!home||!away||home===away) {
+    showError('Pilih liga dan tim yang berbeda');
+    return;
+  }
+
+  $('error-card').style.display = 'none';
+  const res = predict(home, away, liga, odds);
+  if (!res) { showError(`Liga ${liga} tidak dikenali`); return; }
+  renderResult(res, date, odds);
+}
+
+function showError(msg) {
+  const el = $('error-card');
+  el.textContent = msg;
+  el.style.display = 'block';
+  $('result').classList.remove('show');
+  $('result').style.display = 'none';
+}
+
+function pct(v) { return (v*100).toFixed(1)+'%'; }
+function fmt(v) { return (v>=0?'+':'')+v.toFixed(3); }
+
+function renderResult(res, date, odds) {
+  const isSniper = res.tier === 'SNIPER';
+  const banner   = $('tier-banner');
+  banner.className = 'tier-banner ' + (isSniper?'sniper':'hold');
+  $('tier-icon').textContent  = isSniper ? '🎯' : '⏸';
+  $('tier-label').textContent = res.tier;
+  $('tier-label').className   = 'tier-label ' + (isSniper?'sniper':'hold');
+  $('tier-reason').textContent = res.reason;
+
+  const predLabel = {home_win:`${res.home} menang`,draw:'Imbang',away_win:`${res.away} menang`}[res.prediction];
+  $('m-pred').textContent = predLabel;
+  $('m-conf').textContent = pct(res.confidence);
+  $('m-conf').className   = 'card-val ' + (res.confidence>=res.threshold?'green':'red');
+  $('m-conf-sub').textContent = 'threshold ' + pct(res.threshold);
+  $('m-elo').textContent  = (res.elo_diff>=0?'+':'')+res.elo_diff;
+  $('m-elo').className    = 'card-val ' + (res.elo_diff>0?'green':'red');
+  $('m-elo-sub').textContent = res.home.slice(0,12)+' vs '+res.away.slice(0,12);
+  $('m-lh').textContent   = res.lambda_home.toFixed(3);
+  $('m-la').textContent   = res.lambda_away.toFixed(3);
+  const lt = res.lambda_home + res.lambda_away;
+  $('m-lt').textContent   = lt.toFixed(2);
+  $('m-lt').className     = 'card-val ' + (lt>=1.2&&lt<=6.5?'green':'red');
+
+  // Prob bars
+  $('pb-home-name').textContent = res.home.slice(0,14);
+  $('pb-away-name').textContent = res.away.slice(0,14);
+  $('pb-home').style.width = pct(res.home_prob);
+  $('pb-draw').style.width = pct(res.draw_prob);
+  $('pb-away').style.width = pct(res.away_prob);
+  $('pb-home-pct').textContent = pct(res.home_prob);
+  $('pb-draw-pct').textContent = pct(res.draw_prob);
+  $('pb-away-pct').textContent = pct(res.away_prob);
+
+  // DC / Elo
+  $('dc-probs').innerHTML =
+    `🏠 ${pct(res.dc.home_win)}&nbsp;&nbsp;🤝 ${pct(res.dc.draw)}&nbsp;&nbsp;✈️ ${pct(res.dc.away_win)}<br>` +
+    `λ ${res.dc.lambda_home.toFixed(2)} / ${res.dc.lambda_away.toFixed(2)}`;
+  $('elo-probs').innerHTML =
+    `🏠 ${pct(res.elo.home_win)}&nbsp;&nbsp;🤝 ${pct(res.elo.draw)}&nbsp;&nbsp;✈️ ${pct(res.elo.away_win)}<br>` +
+    `${res.home.slice(0,10)}: ${res.elo.elo_home} | ${res.away.slice(0,10)}: ${res.elo.elo_away}`;
+
+  $('match-info').innerHTML =
+    `📅 ${date}<br>🏆 ${LIGA_DISPLAY[res.liga]||res.liga}<br>🎯 Threshold: ${pct(res.threshold)}`;
+
+  // Top scores
+  $('top-scores').innerHTML = res.dc.top_scores
+    .map(s=>`<span class="score-pill"><b>${s.gh}-${s.ga}</b> ${(s.p*100).toFixed(1)}%</span>`).join('');
+
+  // Kelly
+  if (res.kelly) {
+    $('kelly-card').style.display = 'block';
+    $('k-tier').textContent  = res.kelly.tier;
+    $('k-ev').textContent    = fmt(res.kelly.ev);
+    $('k-full').textContent  = pct(res.kelly.fFull);
+    $('k-stake').textContent = pct(res.kelly.stake);
+  } else {
+    $('kelly-card').style.display = 'none';
+  }
+
+  // Filters
+  $('filters').innerHTML = res.filters.map(f=>`
+    <div class="filter-badge ${f.pass?'pass':'fail'}">
+      <div class="fdot ${f.pass?'pass':'fail'}"></div>
+      <div>
+        <span class="fname">${f.name}</span>
+        <div class="fmsg">${f.msg}</div>
+      </div>
+    </div>`).join('');
+
+  $('result').style.display = 'block';
+  setTimeout(()=>$('result').classList.add('show'), 10);
+  $('result').scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+// ════════════════════════════════════════════════════
+//  INIT
+// ════════════════════════════════════════════════════
+window.addEventListener('DOMContentLoaded', async () => {
+  // Set today's date
+  $('match-date').value = new Date().toISOString().slice(0,10);
+
+  const ok = await loadModel();
+  if (!ok) {
+    $('loading').classList.add('hide');
+    showError('Gagal memuat model. Pastikan model_v20_complete.json tersedia.');
+    return;
+  }
+
+  // Populate liga dropdown
+  const leagues = MODEL.active_leagues || Object.keys(MODEL.dc_params||{});
+  const ligaSel = $('liga');
+  ligaSel.innerHTML = leagues.map(l=>
+    `<option value="${l}">${LIGA_DISPLAY[l]||l}</option>`).join('');
+
+  $('stat-leagues').textContent = leagues.length;
+  $('stat-teams').textContent   = (MODEL.meta||{}).total_teams || '—';
+
+  onLigaChange();
+  $('loading').classList.add('hide');
+});
+</script>
+</body>
+</html>
