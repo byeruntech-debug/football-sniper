@@ -607,10 +607,27 @@ if not MODEL_LOADED:
     st.error("Model tidak ditemukan. Pastikan `model_v20_complete.json` ada di folder yang sama dengan `app.py`, atau edit variabel `candidates` di `get_model_path()`.")
     st.stop()
 
+# Load dari JSON — otomatis include semua liga aktif
 ACTIVE_LEAGUES = v20.get("active_leagues", [
     "Bundesliga","EPL","Serie_A","Eredivisie",
-    "La_Liga","Liga_Portugal","Super_Lig"
+    "La_Liga","Liga_Portugal","Super_Lig",
+    "Ligue_1","Belgium","Scotland"
 ])
+
+# Display names yang lebih rapi
+LIGA_DISPLAY = {
+    "EPL"          : "Premier League (England)",
+    "Bundesliga"   : "Bundesliga (Germany)",
+    "Serie_A"      : "Serie A (Italy)",
+    "La_Liga"      : "La Liga (Spain)",
+    "Ligue_1"      : "Ligue 1 (France)",
+    "Eredivisie"   : "Eredivisie (Netherlands)",
+    "Liga_Portugal": "Primeira Liga (Portugal)",
+    "Super_Lig"    : "Super Lig (Turkey)",
+    "Belgium"      : "Pro League (Belgium)",
+    "Scotland"     : "Premiership (Scotland)",
+    "Brazil"       : "Serie A (Brazil) [watchlist]",
+}
 
 # ── Input form ────────────────────────────────────────
 st.markdown('<div class="form-card">', unsafe_allow_html=True)
@@ -619,7 +636,10 @@ col1, col2, col3 = st.columns([1.2, 1.2, 1])
 
 with col1:
     st.markdown('<span class="form-label">Liga</span>', unsafe_allow_html=True)
-    liga = st.selectbox("Liga", ACTIVE_LEAGUES, label_visibility="collapsed")
+    liga_options = {LIGA_DISPLAY.get(l, l): l for l in ACTIVE_LEAGUES}
+    liga_display = st.selectbox("Liga", list(liga_options.keys()),
+                                label_visibility="collapsed")
+    liga = liga_options[liga_display]
 
 teams = get_teams(liga)
 
